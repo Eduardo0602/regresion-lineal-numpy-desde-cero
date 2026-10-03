@@ -1,59 +1,59 @@
-# Regresión lineal desde cero con NumPy: ¿puede un plano predecir la profundidad de los sismos de Ecuador?
+<p align="right"><b>English</b> · <a href="README.es.md">Español</a></p>
 
-Regresión lineal múltiple sin scikit-learn sobre 15 años de sismos del USGS: derivación de la función de costo, demostración de existencia y unicidad del mínimo, solución analítica, descenso por gradiente y verificación contra scikit-learn.
+# Linear regression from scratch with NumPy: can a plane predict how deep Ecuador's earthquakes are?
 
-> **English summary.** Multiple linear regression implemented from NumPy primitives on 2010–2025 USGS earthquake data for Ecuador, predicting hypocenter depth from location. Existence (Weierstrass with coercivity) and uniqueness (strict convexity via a positive definite Hessian) of the minimizer are proved; the normal equations are solved with `np.linalg.solve` and gradient descent is derived from a first-order Taylor expansion. The solution matches scikit-learn to $`2.84 \times 10^{-13}`$. The modest $`R^2 = 0.3000`$ is reported honestly: depth is bimodal (crustal vs. subduction earthquakes) and one plane cannot capture it.
+Multiple linear regression without scikit-learn on 15 years of USGS earthquakes: derivation of the cost function, proof of existence and uniqueness of the minimizer, analytical solution, gradient descent and verification against scikit-learn.
 
-![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white) ![NumPy](https://img.shields.io/badge/NumPy-013243?logo=numpy) ![pandas](https://img.shields.io/badge/pandas-150458?logo=pandas) ![scikit-learn](https://img.shields.io/badge/scikit--learn-solo%20verificaci%C3%B3n-F7931E?logo=scikitlearn&logoColor=white) ![Licencia](https://img.shields.io/badge/licencia-MIT-green) [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Eduardo0602/regresion-lineal-numpy-desde-cero/blob/main/notebooks/01_exploracion_datos_sismicos.ipynb)
+![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white) ![NumPy](https://img.shields.io/badge/NumPy-013243?logo=numpy) ![pandas](https://img.shields.io/badge/pandas-150458?logo=pandas) ![scikit-learn](https://img.shields.io/badge/scikit--learn-verification%20only-F7931E?logo=scikitlearn&logoColor=white) ![License](https://img.shields.io/badge/license-MIT-green) [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Eduardo0602/regresion-lineal-numpy-desde-cero/blob/main/notebooks/01_exploracion_datos_sismicos.ipynb)
 
-## El problema
+## The problem
 
-En Ecuador, la placa de Nazca se hunde bajo la Sudamericana (zona de Wadati–Benioff): hacia el este, los sismos deberían ser más profundos. ¿Basta la posición geográfica para predecir la profundidad del hipocentro con un modelo lineal? El proyecto responde implementando la regresión desde cero, con cada fórmula derivada y cada identidad demostrada.
+In Ecuador the Nazca plate sinks beneath the South American plate (Wadati–Benioff zone): towards the east, earthquakes should be deeper. Is geographic position enough to predict hypocenter depth with a linear model? The project answers by implementing regression from scratch, with every formula derived and every identity proved.
 
-## Datos
+## Data
 
-| Característica | Detalle |
+| Feature | Detail |
 |---|---|
-| Fuente | [USGS Earthquake Hazards Program, FDSNWS Event Web Service](https://earthquake.usgs.gov/fdsnws/event/1/) |
-| Consulta | Sismos en Ecuador, 2010–2025, magnitud ≥ 2 (rectángulo: N 2,5; S −6; O −82,5; E −74,5) |
-| Dimensiones | 1 187 filas × 22 columnas (procesado: 1 187 × 3) |
-| Variable objetivo | `depth`: profundidad del hipocentro (km) |
-| Variables seleccionadas | `longitude` (Pearson 0,521) y `latitude` (Pearson −0,207); `mag` descartada por correlación prácticamente nula |
+| Source | [USGS Earthquake Hazards Program, FDSNWS Event Web Service](https://earthquake.usgs.gov/fdsnws/event/1/) |
+| Query | Earthquakes in Ecuador, 2010–2025, magnitude ≥ 2 (box: N 2.5; S −6; W −82.5; E −74.5) |
+| Dimensions | 1,187 rows × 22 columns (processed: 1,187 × 3) |
+| Target | `depth`: hypocenter depth (km) |
+| Selected features | `longitude` (Pearson 0.521) and `latitude` (Pearson −0.207); `mag` discarded for practically zero correlation |
 
-Los datos no se incluyen; se descargan con la URL de la API (ver Cómo reproducir).
+The data are not included; they are downloaded with the API URL (see How to reproduce).
 
-## Fundamento matemático
+## Mathematical foundation
 
-El modelo minimiza
+The model minimizes
 
 ```math
 J(\boldsymbol{\beta}) = \frac{1}{2m}\|X\boldsymbol{\beta} - \mathbf{y}\|^2,
 ```
 
-con $`X \in \mathbb{R}^{1187 \times 3}`$ (columna de unos para el intercepto) y $`\boldsymbol{\beta} \in \mathbb{R}^3`$.
+with $`X \in \mathbb{R}^{1187 \times 3}`$ (a column of ones for the intercept) and $`\boldsymbol{\beta} \in \mathbb{R}^3`$.
 
-**Existencia y unicidad.** $`J`$ es continua y coerciva (por la descomposición espectral de $`X^\top X`$ y la cota con $`\lambda_{\min}`$), así que el teorema de Weierstrass garantiza un mínimo. La hessiana $`H_J = \frac{1}{m}X^\top X`$ es definida positiva si las columnas de $`X`$ son linealmente independientes, lo que da convexidad estricta y por tanto unicidad.
+**Existence and uniqueness.** $`J`$ is continuous and coercive (by the spectral decomposition of $`X^\top X`$ and the bound with $`\lambda_{\min}`$), so Weierstrass' theorem guarantees a minimum. The Hessian $`H_J = \frac{1}{m}X^\top X`$ is positive definite if the columns of $`X`$ are linearly independent, which gives strict convexity and therefore uniqueness.
 
-**Dos vías de solución.**
-- Ecuaciones normales $`X^\top X\,\boldsymbol{\beta} = X^\top \mathbf{y}`$, resueltas con `np.linalg.solve` (no con `np.linalg.inv`, por estabilidad y eficiencia).
-- Descenso por gradiente, $`\boldsymbol{\beta}_{t+1} = \boldsymbol{\beta}_t - \frac{\alpha}{m}X^\top(X\boldsymbol{\beta}_t - \mathbf{y})`$, derivado de la aproximación de Taylor de primer orden y la desigualdad de Cauchy–Schwarz.
+**Two ways to solve it.**
+- Normal equations $`X^\top X\,\boldsymbol{\beta} = X^\top \mathbf{y}`$, solved with `np.linalg.solve` (not with `np.linalg.inv`, for stability and efficiency).
+- Gradient descent, $`\boldsymbol{\beta}_{t+1} = \boldsymbol{\beta}_t - \frac{\alpha}{m}X^\top(X\boldsymbol{\beta}_t - \mathbf{y})`$, derived from the first-order Taylor approximation and the Cauchy–Schwarz inequality.
 
-## Resultados
+## Results
 
-- **Coeficientes (variables estandarizadas):** $`\beta_0 = 62{,}149`$ km, $`\beta_1 = 27{,}921`$ km por desviación estándar de longitud, $`\beta_2 = -9{,}347`$ km por desviación estándar de latitud.
-- **$`\beta_1 > 0`$ confirma la geometría de Wadati–Benioff:** hacia el este la profundidad aumenta.
-- **Ajuste limitado y reportado tal cual:** $`R^2 = 0{,}3000`$, RMSE $`= 45{,}94`$ km, MAE $`= 34{,}61`$ km. La profundidad es bimodal (sismos corticales de 0–30 km y de subducción de 100–200 km) y un único plano no la captura.
-- **Buen condicionamiento:** los valores propios de $`X^\top X`$ son 1101,70; 1187,00 y 1272,30, con número de condición 1,15.
+- **Coefficients (standardized features):** $`\beta_0 = 62.149`$ km, $`\beta_1 = 27.921`$ km per standard deviation of longitude, $`\beta_2 = -9.347`$ km per standard deviation of latitude.
+- **$`\beta_1 > 0`$ confirms the Wadati–Benioff geometry:** depth increases towards the east.
+- **Limited fit, reported as is:** $`R^2 = 0.3000`$, RMSE $`= 45.94`$ km, MAE $`= 34.61`$ km. Depth is bimodal (crustal earthquakes at 0–30 km and subduction ones at 100–200 km) and a single plane cannot capture it.
+- **Well conditioned:** the eigenvalues of $`X^\top X`$ are 1101.70, 1187.00 and 1272.30, with condition number 1.15.
 
-![Longitud frente a profundidad](reports/figures/longitude_vs_depth_regresion.png)
+![Longitude versus depth](reports/figures/longitude_vs_depth_regresion.png)
 
-![Efecto de la tasa de aprendizaje](reports/figures/efecto_tasa_aprendizaje.png)
+![Effect of the learning rate](reports/figures/efecto_tasa_aprendizaje.png)
 
-## Verificación
+## Verification
 
-La solución analítica difiere de `LinearRegression` de scikit-learn en $`2{,}84 \times 10^{-13}`$ (máxima diferencia entre coeficientes). El descenso por gradiente llega a $`2{,}48 \times 10^{-4}`$ del óptimo en 118 épocas con $`\alpha = 0{,}1`$.
+The analytical solution differs from scikit-learn's `LinearRegression` by $`2.84 \times 10^{-13}`$ (maximum difference between coefficients). Gradient descent gets within $`2.48 \times 10^{-4}`$ of the optimum in 118 epochs with $`\alpha = 0.1`$.
 
-## Cómo reproducir
+## How to reproduce
 
 ```bash
 git clone https://github.com/Eduardo0602/regresion-lineal-numpy-desde-cero.git
@@ -61,48 +61,50 @@ cd regresion-lineal-numpy-desde-cero
 conda create -n ds_portafolio python=3.11 -y
 conda activate ds_portafolio
 pip install -r requirements.txt
-# Descargar los datos del USGS y guardarlos en data/raw/:
+# Download the USGS data and save it in data/raw/:
 # https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&starttime=2010-01-01&endtime=2025-12-31&minmagnitude=2&minlatitude=-6&maxlatitude=2.5&minlongitude=-82.5&maxlongitude=-74.5
-jupyter lab   # abrir 01 y 02 en orden: Kernel → Restart & Run All
+jupyter lab   # open 01 and 02 in order: Kernel → Restart & Run All
 ```
 
-| Notebook | Contenido |
+| Notebook | Contents |
 |---|---|
-| [`01_exploracion_datos_sismicos.ipynb`](notebooks/01_exploracion_datos_sismicos.ipynb) | Distribución bimodal de la profundidad, Pearson frente a Spearman, selección de variables, corte transversal de Wadati–Benioff |
-| [`02_regresion_lineal.ipynb`](notebooks/02_regresion_lineal.ipynb) | Función de costo, gradiente con identidades demostradas, existencia y unicidad; clase `RegresionLineal` (analítica y descenso por gradiente); verificación contra scikit-learn; efecto de $`\alpha`$ |
+| [`01_exploracion_datos_sismicos.ipynb`](notebooks/01_exploracion_datos_sismicos.ipynb) | Bimodal depth distribution, Pearson versus Spearman, feature selection, Wadati–Benioff cross-section |
+| [`02_regresion_lineal.ipynb`](notebooks/02_regresion_lineal.ipynb) | Cost function, gradient with proved identities, existence and uniqueness; `RegresionLineal` class (analytical and gradient descent); verification against scikit-learn; effect of $`\alpha`$ |
 
-## Estructura del proyecto
+Notebooks and code comments are in Spanish.
+
+## Project structure
 
 ```
 regresion-lineal-numpy-desde-cero/
-├── data/processed/       # sismos_clean.csv (1187 × 3), se genera con el notebook 01
+├── data/processed/       # sismos_clean.csv (1187 × 3), generated by notebook 01
 ├── notebooks/            # 01 → 02
-├── reports/figures/      # 9 figuras
+├── reports/figures/      # 9 figures
 ├── requirements.txt
 └── LICENSE
 ```
 
-## Limitaciones
+## Limitations
 
-- Un modelo lineal no captura la distribución bimodal de la profundidad; un modelo por régimen sísmico (cortical y de subducción) o uno no lineal sería el siguiente paso.
-- Las métricas se calculan sobre todo el conjunto: el objetivo fue la implementación y su verificación, no la capacidad predictiva fuera de muestra.
+- A linear model cannot capture the bimodal depth distribution; a model per seismic regime (crustal and subduction) or a nonlinear one would be the next step.
+- Metrics are computed on the whole dataset: the goal was the implementation and its verification, not out-of-sample predictive power.
 
-## Lo que aprendí
+## What I learned
 
-1. **Demostrar, no declarar.** El mínimo único no existe porque lo diga un libro: se construye la cadena continuidad y coercividad, existencia, hessiana definida positiva, convexidad estricta, unicidad.
-2. **La implementación no es la fórmula traducida.** $`(X^\top X)^{-1}X^\top \mathbf{y}`$ no se calcula invirtiendo la matriz: resolver el sistema es más estable y eficiente.
-3. **Estandarizar no es opcional para el descenso por gradiente.** Con escalas distintas las curvas de nivel se deforman y el descenso oscila; estandarizar fue la diferencia entre converger en 118 épocas y no converger en 500.
-4. **Un $`R^2`$ bajo también es información.** El 30 % de varianza explicada revela una estructura bimodal que un plano no puede capturar.
+1. **Prove, do not declare.** The unique minimum does not exist because a book says so: the chain is built from continuity and coercivity, to existence, to a positive definite Hessian, to strict convexity, to uniqueness.
+2. **Implementation is not the formula translated.** $`(X^\top X)^{-1}X^\top \mathbf{y}`$ is not computed by inverting the matrix: solving the system is more stable and efficient.
+3. **Standardizing is not optional for gradient descent.** With different scales the level curves are distorted and descent oscillates; standardizing was the difference between converging in 118 epochs and not converging in 500.
+4. **A low $`R^2`$ is also information.** 30 % of explained variance reveals a bimodal structure that a plane cannot capture.
 
 ---
 
-### Portafolio *De Matemático a Data Scientist*
+### Portfolio *From Mathematician to Data Scientist*
 
-| Proyecto | Pregunta | Herramientas |
+| Project | Question | Tools |
 |---|---|---|
-| [Muestreo complejo con Ser Estudiante](https://github.com/Eduardo0602/muestreo-complejo-ser-estudiante) | ¿Cuánto se equivoca quien ignora el diseño muestral? | R, survey |
-| [EDA con datos sucios: defunciones 2021](https://github.com/Eduardo0602/eda-limpieza-defunciones-ecuador-pandas-sql) | ¿Qué hay que corregir antes de confiar en un registro oficial? | Python, pandas, SQL |
-| **Regresión lineal desde cero** (este repositorio) | ¿Puede un plano predecir la profundidad de los sismos de Ecuador? | Python, NumPy |
-| [Álgebra lineal visual](https://github.com/Eduardo0602/algebra-lineal-visual-numpy) | ¿Qué hace geométricamente una matriz? | Python, NumPy |
+| [Complex survey sampling with Ser Estudiante](https://github.com/Eduardo0602/muestreo-complejo-ser-estudiante) | How wrong is an analysis that ignores the sampling design? | R, survey |
+| [Messy-data EDA: deaths 2021](https://github.com/Eduardo0602/eda-limpieza-defunciones-ecuador-pandas-sql) | What must be fixed before trusting an official registry? | Python, pandas, SQL |
+| **Linear regression from scratch** (this repository) | Can a plane predict how deep Ecuador's earthquakes are? | Python, NumPy |
+| [Visual linear algebra](https://github.com/Eduardo0602/algebra-lineal-visual-numpy) | What does a matrix do, geometrically? | Python, NumPy |
 
-Eduardo Araque · Matemático (Universidad Central del Ecuador) · [GitHub](https://github.com/Eduardo0602) · [LinkedIn](https://www.linkedin.com/in/eduardo-araque-j%C3%A1come-311b93235)
+Eduardo Araque · Mathematician (Universidad Central del Ecuador) · [GitHub](https://github.com/Eduardo0602) · [LinkedIn](https://www.linkedin.com/in/eduardo-araque-j%C3%A1come-311b93235)
