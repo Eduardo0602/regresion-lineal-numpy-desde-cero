@@ -2,7 +2,7 @@
 
 Regresión lineal múltiple sin scikit-learn sobre 15 años de sismos del USGS: derivación de la función de costo, demostración de existencia y unicidad del mínimo, solución analítica, descenso por gradiente y verificación contra scikit-learn.
 
-> **English summary.** Multiple linear regression implemented from NumPy primitives on 2010–2025 USGS earthquake data for Ecuador, predicting hypocenter depth from location. Existence (Weierstrass with coercivity) and uniqueness (strict convexity via a positive definite Hessian) of the minimizer are proved; the normal equations are solved with `np.linalg.solve` and gradient descent is derived from a first-order Taylor expansion. The solution matches scikit-learn to $2.84 \times 10^{-13}$. The modest $R^2 = 0.3000$ is reported honestly: depth is bimodal (crustal vs. subduction earthquakes) and one plane cannot capture it.
+> **English summary.** Multiple linear regression implemented from NumPy primitives on 2010–2025 USGS earthquake data for Ecuador, predicting hypocenter depth from location. Existence (Weierstrass with coercivity) and uniqueness (strict convexity via a positive definite Hessian) of the minimizer are proved; the normal equations are solved with `np.linalg.solve` and gradient descent is derived from a first-order Taylor expansion. The solution matches scikit-learn to $`2.84 \times 10^{-13}`$. The modest $`R^2 = 0.3000`$ is reported honestly: depth is bimodal (crustal vs. subduction earthquakes) and one plane cannot capture it.
 
 ![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white) ![NumPy](https://img.shields.io/badge/NumPy-013243?logo=numpy) ![pandas](https://img.shields.io/badge/pandas-150458?logo=pandas) ![scikit-learn](https://img.shields.io/badge/scikit--learn-solo%20verificaci%C3%B3n-F7931E?logo=scikitlearn&logoColor=white) ![Licencia](https://img.shields.io/badge/licencia-MIT-green) [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Eduardo0602/regresion-lineal-numpy-desde-cero/blob/main/notebooks/01_exploracion_datos_sismicos.ipynb)
 
@@ -26,22 +26,24 @@ Los datos no se incluyen; se descargan con la URL de la API (ver Cómo reproduci
 
 El modelo minimiza
 
-$$J(\boldsymbol{\beta}) = \frac{1}{2m}\|X\boldsymbol{\beta} - \mathbf{y}\|^2,$$
+```math
+J(\boldsymbol{\beta}) = \frac{1}{2m}\|X\boldsymbol{\beta} - \mathbf{y}\|^2,
+```
 
-con $X \in \mathbb{R}^{1187 \times 3}$ (columna de unos para el intercepto) y $\boldsymbol{\beta} \in \mathbb{R}^3$.
+con $`X \in \mathbb{R}^{1187 \times 3}`$ (columna de unos para el intercepto) y $`\boldsymbol{\beta} \in \mathbb{R}^3`$.
 
-**Existencia y unicidad.** $J$ es continua y coerciva (por la descomposición espectral de $X^\top X$ y la cota con $\lambda_{\min}$), así que el teorema de Weierstrass garantiza un mínimo. La hessiana $H_J = \frac{1}{m}X^\top X$ es definida positiva si las columnas de $X$ son linealmente independientes, lo que da convexidad estricta y por tanto unicidad.
+**Existencia y unicidad.** $`J`$ es continua y coerciva (por la descomposición espectral de $`X^\top X`$ y la cota con $`\lambda_{\min}`$), así que el teorema de Weierstrass garantiza un mínimo. La hessiana $`H_J = \frac{1}{m}X^\top X`$ es definida positiva si las columnas de $`X`$ son linealmente independientes, lo que da convexidad estricta y por tanto unicidad.
 
 **Dos vías de solución.**
-- Ecuaciones normales $X^\top X\,\boldsymbol{\beta} = X^\top \mathbf{y}$, resueltas con `np.linalg.solve` (no con `np.linalg.inv`, por estabilidad y eficiencia).
-- Descenso por gradiente, $\boldsymbol{\beta}_{t+1} = \boldsymbol{\beta}_t - \frac{\alpha}{m}X^\top(X\boldsymbol{\beta}_t - \mathbf{y})$, derivado de la aproximación de Taylor de primer orden y la desigualdad de Cauchy–Schwarz.
+- Ecuaciones normales $`X^\top X\,\boldsymbol{\beta} = X^\top \mathbf{y}`$, resueltas con `np.linalg.solve` (no con `np.linalg.inv`, por estabilidad y eficiencia).
+- Descenso por gradiente, $`\boldsymbol{\beta}_{t+1} = \boldsymbol{\beta}_t - \frac{\alpha}{m}X^\top(X\boldsymbol{\beta}_t - \mathbf{y})`$, derivado de la aproximación de Taylor de primer orden y la desigualdad de Cauchy–Schwarz.
 
 ## Resultados
 
-- **Coeficientes (variables estandarizadas):** $\beta_0 = 62{,}149$ km, $\beta_1 = 27{,}921$ km por desviación estándar de longitud, $\beta_2 = -9{,}347$ km por desviación estándar de latitud.
-- **$\beta_1 > 0$ confirma la geometría de Wadati–Benioff:** hacia el este la profundidad aumenta.
-- **Ajuste limitado y reportado tal cual:** $R^2 = 0{,}3000$, RMSE $= 45{,}94$ km, MAE $= 34{,}61$ km. La profundidad es bimodal (sismos corticales de 0–30 km y de subducción de 100–200 km) y un único plano no la captura.
-- **Buen condicionamiento:** los valores propios de $X^\top X$ son 1101,70; 1187,00 y 1272,30, con número de condición 1,15.
+- **Coeficientes (variables estandarizadas):** $`\beta_0 = 62{,}149`$ km, $`\beta_1 = 27{,}921`$ km por desviación estándar de longitud, $`\beta_2 = -9{,}347`$ km por desviación estándar de latitud.
+- **$`\beta_1 > 0`$ confirma la geometría de Wadati–Benioff:** hacia el este la profundidad aumenta.
+- **Ajuste limitado y reportado tal cual:** $`R^2 = 0{,}3000`$, RMSE $`= 45{,}94`$ km, MAE $`= 34{,}61`$ km. La profundidad es bimodal (sismos corticales de 0–30 km y de subducción de 100–200 km) y un único plano no la captura.
+- **Buen condicionamiento:** los valores propios de $`X^\top X`$ son 1101,70; 1187,00 y 1272,30, con número de condición 1,15.
 
 ![Longitud frente a profundidad](reports/figures/longitude_vs_depth_regresion.png)
 
@@ -49,7 +51,7 @@ con $X \in \mathbb{R}^{1187 \times 3}$ (columna de unos para el intercepto) y $\
 
 ## Verificación
 
-La solución analítica difiere de `LinearRegression` de scikit-learn en $2{,}84 \times 10^{-13}$ (máxima diferencia entre coeficientes). El descenso por gradiente llega a $2{,}48 \times 10^{-4}$ del óptimo en 118 épocas con $\alpha = 0{,}1$.
+La solución analítica difiere de `LinearRegression` de scikit-learn en $`2{,}84 \times 10^{-13}`$ (máxima diferencia entre coeficientes). El descenso por gradiente llega a $`2{,}48 \times 10^{-4}`$ del óptimo en 118 épocas con $`\alpha = 0{,}1`$.
 
 ## Cómo reproducir
 
@@ -67,7 +69,7 @@ jupyter lab   # abrir 01 y 02 en orden: Kernel → Restart & Run All
 | Notebook | Contenido |
 |---|---|
 | [`01_exploracion_datos_sismicos.ipynb`](notebooks/01_exploracion_datos_sismicos.ipynb) | Distribución bimodal de la profundidad, Pearson frente a Spearman, selección de variables, corte transversal de Wadati–Benioff |
-| [`02_regresion_lineal.ipynb`](notebooks/02_regresion_lineal.ipynb) | Función de costo, gradiente con identidades demostradas, existencia y unicidad; clase `RegresionLineal` (analítica y descenso por gradiente); verificación contra scikit-learn; efecto de $\alpha$ |
+| [`02_regresion_lineal.ipynb`](notebooks/02_regresion_lineal.ipynb) | Función de costo, gradiente con identidades demostradas, existencia y unicidad; clase `RegresionLineal` (analítica y descenso por gradiente); verificación contra scikit-learn; efecto de $`\alpha`$ |
 
 ## Estructura del proyecto
 
@@ -88,9 +90,9 @@ regresion-lineal-numpy-desde-cero/
 ## Lo que aprendí
 
 1. **Demostrar, no declarar.** El mínimo único no existe porque lo diga un libro: se construye la cadena continuidad y coercividad, existencia, hessiana definida positiva, convexidad estricta, unicidad.
-2. **La implementación no es la fórmula traducida.** $(X^\top X)^{-1}X^\top \mathbf{y}$ no se calcula invirtiendo la matriz: resolver el sistema es más estable y eficiente.
+2. **La implementación no es la fórmula traducida.** $`(X^\top X)^{-1}X^\top \mathbf{y}`$ no se calcula invirtiendo la matriz: resolver el sistema es más estable y eficiente.
 3. **Estandarizar no es opcional para el descenso por gradiente.** Con escalas distintas las curvas de nivel se deforman y el descenso oscila; estandarizar fue la diferencia entre converger en 118 épocas y no converger en 500.
-4. **Un $R^2$ bajo también es información.** El 30 % de varianza explicada revela una estructura bimodal que un plano no puede capturar.
+4. **Un $`R^2`$ bajo también es información.** El 30 % de varianza explicada revela una estructura bimodal que un plano no puede capturar.
 
 ---
 
