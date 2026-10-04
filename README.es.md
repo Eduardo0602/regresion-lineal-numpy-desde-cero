@@ -105,4 +105,4 @@ regresion-lineal-numpy-desde-cero/
 | **Regresión lineal desde cero** (este repositorio) | ¿Puede un plano predecir la profundidad de los sismos de Ecuador? | Python, NumPy |
 | [Álgebra lineal visual](https://github.com/Eduardo0602/algebra-lineal-visual-numpy/blob/main/README.es.md) | ¿Qué hace geométricamente una matriz? | Python, NumPy |
 
-Eduardo Araque · Matemático (Universidad Central del Ecuador) · [GitHub](https://github.com/Eduardo0602) · [LinkedIn](https://www.linkedin.com/in/eduardo-araque-j%C3%A1come-311b93235)
+Eduardo Araque · Matemático (Universidad Central del Ecuador) · [GitHub](https://github.com/Eduardo0602) · [LinkedIn](https://www.linkedin.com/in/eduardo-araque-jacome-math)
